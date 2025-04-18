@@ -1,7 +1,0 @@
-Mejores Prácticas de Riego - Evergreen Project
-
-- Riego por goteo es el más eficiente para la mayoría de cultivos hortícolas.
-- Medir la humedad del suelo (sensores o método manual) es clave para ajustar dosis.
-- Considerar la Evapotranspiración (ETo) y el Coeficiente de Cultivo (Kc) para calcular necesidades hídricas.
-- Evitar regar hojas en horas de sol para prevenir quemaduras y enfermedades fúngicas.
-- Un estrés hídrico controlado en la fase final de algunos frutos (tomate, vid) puede mejorar la calidad, pero es arriesgado.
