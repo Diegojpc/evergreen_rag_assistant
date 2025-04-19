@@ -7,7 +7,7 @@
 
 ##  Misión:
 
-Este asistente tiene como objetivo ayudar a los agricultores de Evergreen a tomar decisiones informadas sobre la producción de cultivos a partir de recomendaciones generadas a partir del historial de producción en las parcelas, las condiciones climáticas, las características del suelo, la fase lunar y los parámetros de producción, información que es consolidada por el aplicativo y procesada por un LLM para generar recomendaciones precisas.
+Este asistente tiene como objetivo ayudar a los agricultores de Evergreen a tomar decisiones informadas sobre la producción de cultivos a partir de recomendaciones generadas basadas en el historial de producción de las parcelas, las condiciones climáticas, las características del suelo, la fase lunar y los parámetros de producción, información que es consolidada por el aplicativo y procesada por un LLM para generar recomendaciones precisas.
 
 ##  Alcance:
 
@@ -45,7 +45,7 @@ Usado para verificar si el servidor está funcionando correctamente y está habi
     }
 ```
 
-### 2. Projectos de agricultura:
+### 2. Proyectos de agricultura:
 
 #### 2.1. Obtener información de los proyectos de agricultura:
 
@@ -72,7 +72,7 @@ Usado para obtener información de todos los proyectos de agricultura.
     ]
 ```
 
-####    2.2. Obtener información de un projecto específico:
+####    2.2. Obtener información de un proyecto específico:
 
 Usado para obtener información de un proyecto específico mediante su identificador único.
 
@@ -96,9 +96,9 @@ Usado para obtener información de un proyecto específico mediante su identific
     }
 ```
 
-####    2.3. Obtener información de un projecto específico mediante el identificador de la parcela asociada:
+####    2.3. Obtener información de un proyecto específico mediante el identificador de la parcela asociada:
 
-Usado para obtener información de un projecto específico mediante el identificador de la parcela asociada.
+Usado para obtener información de un proyecto específico mediante el identificador de la parcela asociada.
 
 - **Endpoint:** `/evergreen/pro/projects/parcel/{parcel_id}`
 - **Método:** `GET`
@@ -119,9 +119,9 @@ Usado para obtener información de un projecto específico mediante el identific
 
 ### 3. Recomendaciones de producción:
 
-#### 3.1. Obtener recomendaciones de producción para un projecto específico:
+#### 3.1. Obtener recomendaciones de producción para un proyecto específico:
 
-Usado para obtener recomendaciones de producción para un projecto específico a partir de una pregunta particular realizada por el usuario.
+Usado para obtener recomendaciones de producción para un proyecto específico a partir de una pregunta particular realizada por el usuario.
 
 - **Endpoint:** `/evergreen/pro/recommendations/`
 - **Método:** `POST`
