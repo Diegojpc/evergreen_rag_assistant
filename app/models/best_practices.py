@@ -29,10 +29,10 @@ class BestIrrigationPractices(BaseModel):
                  The string includes practices.
         """
         if len(self.practices) == 0:
-            practices_str: str = "No best irrigation practices available"
+            practices_str: str = "    No best irrigation practices available"
         else:
             practices_str = """
-            """.join([practice for practice in self.practices])
+            """.join([f"    * {practice}" for practice in self.practices])
 
         return practices_str
 
@@ -68,14 +68,14 @@ class BestAgriculturalPractices(BaseModel):
                  The string includes crop type, current phase, and practices.
         """
         if len(self.practices) == 0:
-            practices_str: str = "No best agricultural practices available"
+            practices_str: str = "    No best agricultural practices available"
         else:
             practices_str = """
-            """.join([practice for practice in self.practices])
+            """.join([f"        * {practice}" for practice in self.practices])
 
         return f"""
-        - Crop Type: {self.crop_type}
-        - Current Phase: {self.current_phase}
-        - Practices:
+                - Crop Type: {self.crop_type}
+                - Current Phase: {self.current_phase}
+                - Practices:
             {practices_str}
         """

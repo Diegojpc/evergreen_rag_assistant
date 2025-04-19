@@ -91,6 +91,10 @@ class RecommendationDomain(BaseModel):
             weather_forecast.to_prompt_string() if weather_forecast else "Not available"
         )
 
+        lunar_analysis_str: str = (
+            lunar_analysis.to_prompt_string() if lunar_analysis else "Not available"
+        )
+
         best_irrigation_practices_str: str = (
             best_irrigation_practices.to_prompt_string()
             if best_irrigation_practices
@@ -129,20 +133,25 @@ class RecommendationDomain(BaseModel):
         4. **Weather Forecast:**
         {weather_forecast_str}
         5. **Moon Phase (optional additional context):**
-        {lunar_analysis}
+        {lunar_analysis_str}
         6. **Retrieved Agronomic Knowledge (manuals, history, best practices):**
-        {best_irrigation_practices_str}
-        {best_agricultural_practices_str}
-        {historical_information_str}
+            - Best Irrigation Practices:
+            {best_irrigation_practices_str}
+
+            - Best Agricultural Practices:
+            {best_agricultural_practices_str}
+
+            - Historical Information:
+            {historical_information_str}
         
         Key Instructions for Your Response:
-        - Prioritize the most urgent or impactful actions.
-        - Be concise but clear in your recommendations and justifications.
-        - Base your justifications explicitly on the data provided (sensors, weather, images, history, manuals). Mention the source if relevant (e.g., 'according to manual', 'due to forecast').
-        - If you detect risks (pests, diseases, adverse weather), include them in the 'warnings' section.
-        - If there is no sensor or image data, indicate this and base your recommendations on the rest of the information.
-        - If the question is very general (e.g., 'what to do?'), focus on the key next actions for the current crop phase and conditions.
-        - The default time horizon is the next week, unless the question specifies otherwise.
+            - Prioritize the most urgent or impactful actions.
+            - Be concise but clear in your recommendations and justifications.
+            - Base your justifications explicitly on the data provided (sensors, weather, images, history, manuals). Mention the source if relevant (e.g., 'according to manual', 'due to forecast').
+            - If you detect risks (pests, diseases, adverse weather), include them in the 'warnings' section.
+            - If there is no sensor or image data, indicate this and base your recommendations on the rest of the information.
+            - If the question is very general (e.g., 'what to do?'), focus on the key next actions for the current crop phase and conditions.
+            - The default time horizon is the next week, unless the question specifies otherwise.
 
         {user_prompt}
         """
