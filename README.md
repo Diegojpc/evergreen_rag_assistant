@@ -1,6 +1,9 @@
 # Asistente para la Producción Agrícola en Evergreen
 
-![evergreen](./assets/image.jpg)
+<div align="center">
+  <img src="./assets/image.jpg" alt="evergreen" style="max-width: 600;">
+  <p><em>Figura 1: Evergreen. Elaboración Propia usando <a href="https://gemini.google.com/">Gemini.</a></em></p>
+</div>
 
 ##  Misión:
 
@@ -188,11 +191,12 @@ app/
 └── main.py # Punto de entrada de la aplicación
 ```
 
-Este servicio simula el *Servicio RAG* que orquesta las peticiones a los diferentes servicios externos y la respuesta del LLM. El diagrama de la arquitectura se muestra en la figura 1.
+Este servicio simula el *Servicio RAG* que orquesta las peticiones a los diferentes servicios externos y la respuesta del LLM. El diagrama de la arquitectura se muestra en la figura 2.
 
-![Arquitectura](./assets/arq.png)
-
-*Figura 1: Arquitectura del proyecto. Elaboración Propia.*
+<div align="center">
+  <img src="./assets/arq.png" alt="Arquitectura" style="max-width: 600;">
+  <p><em>Figura 2: Arquitectura del proyecto. Elaboración Propia.</em></p>
+</div>
 
 ##  Instalación:
 
