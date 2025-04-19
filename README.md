@@ -1,5 +1,7 @@
 # Asistente para la Producción Agrícola en Evergreen
 
+![evergreen](./assets/image.jpg)
+
 ##  Misión:
 
 Este asistente tiene como objetivo ayudar a los agricultores de Evergreen a tomar decisiones informadas sobre la producción de cultivos a partir de recomendaciones generadas a partir del historial de producción en las parcelas, las condiciones climáticas, las características del suelo, la fase lunar y los parámetros de producción, información que es consolidada por el aplicativo y procesada por un LLM para generar recomendaciones precisas.
