@@ -20,6 +20,23 @@ from app.services.llms import LLMsService
 
 
 class RecommendationDomain(BaseModel):
+    """
+    A domain class responsible for generating agricultural recommendations based on various data sources.
+
+    This class orchestrates the collection and processing of multiple data points including project details,
+    process information, lunar analysis, satellite imagery, weather forecasts, and best practices to generate
+    comprehensive agricultural recommendations using LLM models.
+
+    Attributes:
+        projects_service: Service for retrieving project information
+        process_service: Service for retrieving process information
+        lunar_service: Service for retrieving lunar analysis data
+        satellite_service: Service for retrieving satellite imagery analysis
+        weather_service: Service for retrieving weather forecasts
+        retrieval_service: Service for retrieving best practices and historical information
+        llms_service: Service for interacting with language models
+    """
+
     projects_service: ProjectInfoService = ProjectInfoService()
     process_service: ProcessInformationService = ProcessInformationService()
     lunar_service: LunarInfoService = LunarInfoService()
@@ -40,6 +57,24 @@ class RecommendationDomain(BaseModel):
         best_agricultural_practices: BestAgriculturalPractices | None,
         historical_information: List[HistoricalInformation] | None,
     ) -> str:
+        """
+        Constructs a comprehensive prompt for the LLM by combining all available contextual information.
+
+        Args:
+            user_question: The user's query or request
+            project_details: Details about the agricultural project
+            process_info: Information about current agricultural processes
+            lunar_analysis: Analysis of lunar phases and their impact
+            satellite_analysis: Analysis of satellite imagery
+            weather_forecast: Weather forecast data
+            best_irrigation_practices: Recommended irrigation practices
+            best_agricultural_practices: Recommended agricultural practices
+            historical_information: Historical data about the project
+
+        Returns:
+            str: A formatted prompt containing all contextual information and instructions for the LLM
+        """
+
         project_details_str: str = project_details.to_prompt_string()
 
         process_info_str: str = (
@@ -119,6 +154,26 @@ class RecommendationDomain(BaseModel):
     def get_recommendations(
         self, request: RecommendationRequest
     ) -> RecommendationResponse:
+        """
+        Generates agricultural recommendations based on the provided request.
+
+        This method:
+        1. Retrieves all relevant contextual information from various services
+        2. Constructs a comprehensive prompt using the build_prompt method
+        3. Queries the appropriate LLM model to generate recommendations
+        4. Returns the formatted response
+
+        Args:
+            request: A RecommendationRequest containing the user's query and parcel ID
+
+        Returns:
+            RecommendationResponse: The generated recommendations and associated metadata
+
+        Raises:
+            HTTPException: If the project is not found (404) or if there's an error querying the LLM (500)
+            HTTPException: If the requested LLM model is not implemented (400)
+        """
+
         project_details: ProjectDetails | None = (
             self.projects_service.get_project_by_parcel_id(parcel_id=request.parcel_id)
         )
@@ -174,8 +229,7 @@ class RecommendationDomain(BaseModel):
 
         if request.model in [
             ImplementedModels.FLAN_T5_LARGE,
-            ImplementedModels.FALCON_RW_1B,
-            ImplementedModels.GPT_NEO_1_3B,
+            ImplementedModels.MISTRAL_8X7B,
         ]:
             try:
                 response: str = self.llms_service.query_huggingface_model(
