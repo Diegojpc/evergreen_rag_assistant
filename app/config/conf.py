@@ -8,6 +8,7 @@ class Config(BaseSettings):
     API_VERSION: str = "1.0.0"
 
     HF_TOKEN: SecretStr
+    OPENAI_API_KEY: SecretStr
 
 
 config = Config()
