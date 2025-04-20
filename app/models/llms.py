@@ -15,3 +15,6 @@ class ImplementedModels(Enum):
 
     MISTRAL_8X7B = "mistralai/Mixtral-8x7B-Instruct-v0.1"
     """Mistral's Mixtral 8x7B model, a mixture of experts model optimized for instruction following."""
+
+    GPT_OPENAI_4O = "gpt-4o"
+    """OpenAI's GPT-4o model, a large language model optimized for instruction following."""

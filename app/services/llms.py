@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from huggingface_hub import InferenceClient
+from openai import OpenAI
 
 from app.models.llms import ImplementedModels
 from app.config.conf import config
@@ -39,4 +40,27 @@ class LLMsService(BaseModel):
         return client.text_generation(
             prompt=prompt,
             max_new_tokens=250,
+            temperature=0.7,
         )
+
+    def query_openai_model(
+        self, model: ImplementedModels, system_prompt: str, user_prompt: str
+    ) -> str:
+        completion = OpenAI(
+            api_key=config.OPENAI_API_KEY.get_secret_value()
+        ).chat.completions.create(
+            model=model.value,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            max_tokens=500,
+            temperature=0.7,
+        )
+
+        response_content = completion.choices[0].message.content
+
+        if response_content:
+            return response_content.strip()
+        else:
+            raise Exception("Model returned empty content.")

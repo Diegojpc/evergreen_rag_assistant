@@ -235,6 +235,7 @@ Crear un archivo `.env` en la raíz del proyecto con las variables de entorno ne
     SERVER_PORT="8000"
 
     HF_TOKEN="hf_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    OPENAI_API_KEY="sk-proj-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
 ### 2. Ejecutar servidor:

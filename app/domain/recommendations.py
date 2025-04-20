@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from typing import List
+from typing import List, Tuple
 from pydantic import BaseModel
 
 from app.models.project import ProjectDetails, HistoricalInformation
@@ -56,7 +56,7 @@ class RecommendationDomain(BaseModel):
         best_irrigation_practices: BestIrrigationPractices | None,
         best_agricultural_practices: BestAgriculturalPractices | None,
         historical_information: List[HistoricalInformation] | None,
-    ) -> str:
+    ) -> Tuple[str, str, str]:
         """
         Constructs a comprehensive prompt for the LLM by combining all available contextual information.
 
@@ -72,7 +72,7 @@ class RecommendationDomain(BaseModel):
             historical_information: Historical data about the project
 
         Returns:
-            str: A formatted prompt containing all contextual information and instructions for the LLM
+            A tuple containing the system prompt, user prompt, and a full prompt
         """
 
         project_details_str: str = project_details.to_prompt_string()
@@ -152,13 +152,15 @@ class RecommendationDomain(BaseModel):
             - If there is no sensor or image data, indicate this and base your recommendations on the rest of the information.
             - If the question is very general (e.g., 'what to do?'), focus on the key next actions for the current crop phase and conditions.
             - The default time horizon is the next week, unless the question specifies otherwise.
+        """
+
+        full_prompt: str = f"""
+        {system_prompt}
 
         {user_prompt}
         """
 
-        print(system_prompt)
-
-        return system_prompt
+        return system_prompt, user_prompt, full_prompt
 
     def get_recommendations(
         self, request: RecommendationRequest
@@ -224,7 +226,7 @@ class RecommendationDomain(BaseModel):
             )
         )
 
-        prompt: str = self.build_prompt(
+        system_prompt, user_prompt, full_prompt = self.build_prompt(
             user_question=request.user_question,
             project_details=project_details,
             process_info=process_info,
@@ -243,15 +245,7 @@ class RecommendationDomain(BaseModel):
             try:
                 response: str = self.llms_service.query_huggingface_model(
                     model=request.model,
-                    prompt=prompt,
-                )
-
-                return RecommendationResponse(
-                    model=ImplementedModels.FLAN_T5_LARGE,
-                    project_id=project_details.project_id,
-                    parcel_id=request.parcel_id,
-                    user_question=request.user_question,
-                    details=response,
+                    prompt=full_prompt,
                 )
 
             except Exception as e:
@@ -260,7 +254,32 @@ class RecommendationDomain(BaseModel):
                     detail=f"Error querying LLM: {e}",
                 )
 
-        raise HTTPException(
-            status_code=400,
-            detail=f"Requested LLM '{request.model}' not implemented",
+        elif request.model in [
+            ImplementedModels.GPT_OPENAI_4O,
+        ]:
+            try:
+                response: str = self.llms_service.query_openai_model(
+                    model=request.model,
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                )
+
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error querying LLM: {e}",
+                )
+
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Requested LLM '{request.model}' not implemented",
+            )
+
+        return RecommendationResponse(
+            model=request.model.value,
+            project_id=project_details.project_id,
+            parcel_id=request.parcel_id,
+            user_question=request.user_question,
+            details=response,
         )
