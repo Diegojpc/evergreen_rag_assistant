@@ -48,7 +48,7 @@ class LunarAnalysis(BaseModel):
         """
 
         return f"""
-        - Timestamp: {self.timestamp}
-        - Phase: {self.phase}
-        - Illumination Percent: {self.illumination_percent}%
+            - Timestamp: {self.timestamp}
+            - Phase: {self.phase}
+            - Illumination Percent: {self.illumination_percent}%
         """

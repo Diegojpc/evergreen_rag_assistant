@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, HTTPException, Depends
+from fastapi import APIRouter, Body, HTTPException
 
 from app.models.recommendations import RecommendationRequest, RecommendationResponse
 from app.domain.recommendations import RecommendationDomain
@@ -8,22 +8,19 @@ recomendations_router: APIRouter = APIRouter(
     tags=["Process Recommendations"],
 )
 
+recommendation_domain: RecommendationDomain = RecommendationDomain()
+
+
 @recomendations_router.post(
     path="/",
     description="Get recommendations for a process based on a parcel id and a user query",
     response_model=RecommendationResponse,
 )
-
-def get_recommendation_domain() -> RecommendationDomain:
-    """Dependency function to create/get RecommendationDomain instance."""
-    return RecommendationDomain()
-
 def get_recomendations(
     request: RecommendationRequest = Body(
         ...,
         description="The request object containing the parcel id and user query",
     ),
-    recommendation_domain: RecommendationDomain = Depends(get_recommendation_domain)
 ) -> RecommendationResponse:
     """
     Generate process recommendations based on a parcel ID and user query.
@@ -51,4 +48,4 @@ def get_recomendations(
         raise e
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

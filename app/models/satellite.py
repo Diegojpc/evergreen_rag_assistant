@@ -65,9 +65,9 @@ class SatelliteImageAnalysis(BaseModel):
         """
 
         return f"""
-        - Parcel ID: {self.parcel_id}
-        - Timestamp: {self.timestamp}
-        - Status: {self.status}
-        - Detected Issue: {self.detected_issue}
-        - Coverage Percent: {self.coverage_percent}%
+            - Parcel ID: {self.parcel_id}
+            - Timestamp: {self.timestamp}
+            - Status: {self.status}
+            - Detected Issue: {self.detected_issue}
+            - Coverage Percent: {self.coverage_percent}%
         """

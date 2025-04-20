@@ -41,11 +41,11 @@ class ProcessInformation(BaseModel):
         """
 
         return f"""
-        - Parcel ID: {self.parcel_id}
-        - Timestamp: {self.timestamp}
-        - Soil Moisture: {self.soil_moisture_percent}%
-        - Soil Temperature: {self.soil_temperature_c}°C
-        - Air Temperature: {self.air_temperature_c}°C
-        - Conductivity: {self.conductivity_ms_cm} mS/cm
-        - Electrical Conductivity: {self.conductivity_ec_ms_cm} mS/cm
+            - Parcel ID: {self.parcel_id}
+            - Timestamp: {self.timestamp}
+            - Soil Moisture: {self.soil_moisture_percent}%
+            - Soil Temperature: {self.soil_temperature_c}°C
+            - Air Temperature: {self.air_temperature_c}°C
+            - Conductivity: {self.conductivity_ms_cm} mS/cm
+            - Electrical Conductivity: {self.conductivity_ec_ms_cm} mS/cm
         """

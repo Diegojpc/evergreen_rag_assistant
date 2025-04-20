@@ -38,13 +38,13 @@ class WeatherDailyForecast(BaseModel):
         """
 
         return f"""
-            - Date: {self.date}
-                * Max Temp: {self.max_temperature_c}°C
-                * Min Temp: {self.min_temperature_c}°C
-                * Precipitation: {self.precipitation_mm} mm
-                * Precipitation Prob: {self.precipitation_prob * 100}%
-                * Humidity: {self.humidity_relative_avg}%
-                * Wind Speed: {self.wind_speed_kmh} km/h
+                - Date: {self.date}
+                    * Max Temp: {self.max_temperature_c}°C
+                    * Min Temp: {self.min_temperature_c}°C
+                    * Precipitation: {self.precipitation_mm} mm
+                    * Precipitation Prob: {self.precipitation_prob * 100}%
+                    * Humidity: {self.humidity_relative_avg}%
+                    * Wind Speed: {self.wind_speed_kmh} km/h
         """
 
 
@@ -75,14 +75,14 @@ class WeatherForecast(BaseModel):
         """
 
         if len(self.daily) == 0:
-            daily_forecasts_str: str = "No daily weather forecast data available"
+            daily_forecasts_str: str = "    No daily weather forecast data available"
         else:
             daily_forecasts_str = """
             """.join([forecast.to_prompt_string() for forecast in self.daily])
 
         return f"""
-        - Created At: {self.created_at}
-        - Location: {self.location}
-        - Daily Forecasts:
-        {daily_forecasts_str}
+            - Created At: {self.created_at}
+            - Location: {self.location}
+            - Daily Forecasts:
+            {daily_forecasts_str}
         """

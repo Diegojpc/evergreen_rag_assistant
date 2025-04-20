@@ -1,7 +1,6 @@
 from fastapi import HTTPException
-from typing import List
-from pydantic import BaseModel, Field
-import logging
+from typing import List, Tuple
+from pydantic import BaseModel
 
 from app.models.project import ProjectDetails, HistoricalInformation
 from app.models.best_practices import BestIrrigationPractices, BestAgriculturalPractices
@@ -19,10 +18,25 @@ from app.services.weather_info import WeatherInformationService
 from app.services.retrieval_info import RetrievalInfoService
 from app.services.llms import LLMsService
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 class RecommendationDomain(BaseModel):
+    """
+    A domain class responsible for generating agricultural recommendations based on various data sources.
+
+    This class orchestrates the collection and processing of multiple data points including project details,
+    process information, lunar analysis, satellite imagery, weather forecasts, and best practices to generate
+    comprehensive agricultural recommendations using LLM models.
+
+    Attributes:
+        projects_service: Service for retrieving project information
+        process_service: Service for retrieving process information
+        lunar_service: Service for retrieving lunar analysis data
+        satellite_service: Service for retrieving satellite imagery analysis
+        weather_service: Service for retrieving weather forecasts
+        retrieval_service: Service for retrieving best practices and historical information
+        llms_service: Service for interacting with language models
+    """
+
     projects_service: ProjectInfoService = ProjectInfoService()
     process_service: ProcessInformationService = ProcessInformationService()
     lunar_service: LunarInfoService = LunarInfoService()
@@ -31,8 +45,9 @@ class RecommendationDomain(BaseModel):
     retrieval_service: RetrievalInfoService = RetrievalInfoService()
     llms_service: LLMsService = LLMsService()
 
-    def build_system_prompt(
+    def build_prompt(
         self,
+        user_question: str,
         project_details: ProjectDetails,
         process_info: ProcessInformation | None,
         lunar_analysis: LunarAnalysis | None,
@@ -41,16 +56,29 @@ class RecommendationDomain(BaseModel):
         best_irrigation_practices: BestIrrigationPractices | None,
         best_agricultural_practices: BestAgriculturalPractices | None,
         historical_information: List[HistoricalInformation] | None,
-    ) -> str:
-        """Builds the system part of the prompt containing context and instructions."""
+    ) -> Tuple[str, str, str]:
+        """
+        Constructs a comprehensive prompt for the LLM by combining all available contextual information.
+
+        Args:
+            user_question: The user's query or request
+            project_details: Details about the agricultural project
+            process_info: Information about current agricultural processes
+            lunar_analysis: Analysis of lunar phases and their impact
+            satellite_analysis: Analysis of satellite imagery
+            weather_forecast: Weather forecast data
+            best_irrigation_practices: Recommended irrigation practices
+            best_agricultural_practices: Recommended agricultural practices
+            historical_information: Historical data about the project
+
+        Returns:
+            A tuple containing the system prompt, user prompt, and a full prompt
+        """
+
         project_details_str: str = project_details.to_prompt_string()
 
         process_info_str: str = (
             process_info.to_prompt_string() if process_info else "Not available"
-        )
-        
-        lunar_analysis_str: str = (
-             lunar_analysis.to_prompt_string() if lunar_analysis else "Not available"
         )
 
         satellite_analysis_str: str = (
@@ -61,6 +89,10 @@ class RecommendationDomain(BaseModel):
 
         weather_forecast_str: str = (
             weather_forecast.to_prompt_string() if weather_forecast else "Not available"
+        )
+
+        lunar_analysis_str: str = (
+            lunar_analysis.to_prompt_string() if lunar_analysis else "Not available"
         )
 
         best_irrigation_practices_str: str = (
@@ -78,97 +110,124 @@ class RecommendationDomain(BaseModel):
         if len(historical_information) == 0:
             historical_information_str: str = "No historical information available"
         else:
-            historical_information_str = "\n".join(
-                [info.to_prompt_string() for info in historical_information]
+            historical_information_str = """
+            """.join(
+                [
+                    historical_information.to_prompt_string()
+                    for historical_information in historical_information
+                ]
             )
+
+        user_prompt: str = f"""User/System Request: {user_question}"""
 
         system_prompt: str = f"""
         You are a virtual expert Agronomist Assistant for the Evergreen system. Your goal is to provide contextualized, proactive, and evidence-based recommendations for crop management.
 
         Use the following contextual information to generate your response:
-        1.  **Crop/Project Details:**
+        1. **Crop/Project Details:**
         {project_details_str}
-        2.  **Process Information (Sensors, if available):**
+        2. **Process Information (if available):**
         {process_info_str}
-        3.  **Recent Satellite Image Analysis (if available):**
+        3. **Recent Image Analysis (if available):**
         {satellite_analysis_str}
-        4.  **Weather Forecast:**
+        4. **Weather Forecast:**
         {weather_forecast_str}
-        5.  **Moon Phase (optional additional context):**
+        5. **Moon Phase (optional additional context):**
         {lunar_analysis_str}
-        6.  **Retrieved Agronomic Knowledge (Best Practices & History):**
+        6. **Retrieved Agronomic Knowledge (manuals, history, best practices):**
             - Best Irrigation Practices:
-        {best_irrigation_practices_str}
-            - Best Agricultural Practices for Crop/Phase:
-        {best_agricultural_practices_str}
-            - Historical Information for this Parcel:
-        {historical_information_str}
+            {best_irrigation_practices_str}
 
+            - Best Agricultural Practices:
+            {best_agricultural_practices_str}
+
+            - Historical Information:
+            {historical_information_str}
+        
         Key Instructions for Your Response:
-        - Prioritize the most urgent or impactful actions for the next 5-7 days unless otherwise specified by the user.
-        - Be concise but clear in your recommendations and justifications.
-        - Base your justifications explicitly on the data provided (sensors, weather, images, history, best practices). Mention the source if relevant (e.g., 'according to best practices', 'due to weather forecast indicating high humidity', 'based on low soil moisture sensor readings').
-        - If you detect risks (pests, diseases, adverse weather based on forecast or satellite data), clearly state them as warnings.
-        - If sensor or image data is unavailable, state this limitation and base recommendations on available data (project details, weather, knowledge).
-        - Structure the output clearly, perhaps using bullet points for recommendations and warnings.
-        - Respond directly to the user's request/question provided below.
-                """
-        return system_prompt.strip()
+            - Prioritize the most urgent or impactful actions.
+            - Be concise but clear in your recommendations and justifications.
+            - Base your justifications explicitly on the data provided (sensors, weather, images, history, manuals). Mention the source if relevant (e.g., 'according to manual', 'due to forecast').
+            - If you detect risks (pests, diseases, adverse weather), include them in the 'warnings' section.
+            - If there is no sensor or image data, indicate this and base your recommendations on the rest of the information.
+            - If the question is very general (e.g., 'what to do?'), focus on the key next actions for the current crop phase and conditions.
+            - The default time horizon is the next week, unless the question specifies otherwise.
+        """
+
+        full_prompt: str = f"""
+        {system_prompt}
+
+        {user_prompt}
+        """
+
+        return system_prompt, user_prompt, full_prompt
 
     def get_recommendations(
         self, request: RecommendationRequest
     ) -> RecommendationResponse:
-        """Fetches context, builds prompt, queries the selected LLM, and returns the response."""
-        logger.info(f"Starting recommendation process for parcel: {request.parcel_id} using model: {request.model.value}")
-        
-        # 1. Obtener Detalles del Proyecto
+        """
+        Generates agricultural recommendations based on the provided request.
+
+        This method:
+        1. Retrieves all relevant contextual information from various services
+        2. Constructs a comprehensive prompt using the build_prompt method
+        3. Queries the appropriate LLM model to generate recommendations
+        4. Returns the formatted response
+
+        Args:
+            request: A RecommendationRequest containing the user's query and parcel ID
+
+        Returns:
+            RecommendationResponse: The generated recommendations and associated metadata
+
+        Raises:
+            HTTPException: If the project is not found (404) or if there's an error querying the LLM (500)
+            HTTPException: If the requested LLM model is not implemented (400)
+        """
+
         project_details: ProjectDetails | None = (
             self.projects_service.get_project_by_parcel_id(parcel_id=request.parcel_id)
         )
 
         if project_details is None:
-            logger.warning(f"Project not found for parcel ID {request.parcel_id}")
             raise HTTPException(
                 status_code=404,
                 detail=f"Project not found for parcel ID {request.parcel_id}",
             )
-        logger.info(f"Project details found: {project_details.project_id}")
 
-        # 2. Obtener Datos de Contexto Adicionales (Sensores, Satélite, Clima, etc.)
-        try:
-            logger.info("Fetching context data...")
-            process_info: ProcessInformation | None = (
-                self.process_service.get_process_information(parcel_id=request.parcel_id)
+        process_info: ProcessInformation | None = (
+            self.process_service.get_process_information(parcel_id=request.parcel_id)
+        )
+
+        lunar_analysis: LunarAnalysis | None = self.lunar_service.get_lunar_info()
+
+        satellite_analysis: SatelliteImageAnalysis | None = (
+            self.satellite_service.get_satellite_info(parcel_id=request.parcel_id)
+        )
+
+        weather_forecast: WeatherForecast | None = (
+            self.weather_service.get_weather_forecast(location=project_details.location)
+        )
+
+        best_irrigation_practices: BestIrrigationPractices | None = (
+            self.retrieval_service.get_best_irrigation_practices()
+        )
+
+        best_agricultural_practices: BestAgriculturalPractices | None = (
+            self.retrieval_service.get_best_agricultural_practices(
+                crop_type=project_details.crop_type,
+                current_phase=project_details.current_phase,
             )
-            lunar_analysis: LunarAnalysis | None = self.lunar_service.get_lunar_info()
-            satellite_analysis: SatelliteImageAnalysis | None = (
-                self.satellite_service.get_satellite_info(parcel_id=request.parcel_id)
+        )
+
+        historical_information: List[HistoricalInformation] | None = (
+            self.retrieval_service.get_historical_information_by_parcel_id(
+                parcel_id=request.parcel_id,
             )
-            weather_forecast: WeatherForecast | None = (
-                self.weather_service.get_weather_forecast(location=project_details.location)
-            )
-            best_irrigation_practices: BestIrrigationPractices | None = (
-                self.retrieval_service.get_best_irrigation_practices()
-            )
-            best_agricultural_practices: BestAgriculturalPractices | None = (
-                self.retrieval_service.get_best_agricultural_practices(
-                    crop_type=project_details.crop_type,
-                    current_phase=project_details.current_phase,
-                )
-            )
-            historical_information: List[HistoricalInformation] | None = (
-                self.retrieval_service.get_historical_information_by_parcel_id(
-                    parcel_id=request.parcel_id,
-                )
-            )
-            logger.info("Context data fetched successfully.")
-        except Exception as e:
-             logger.error(f"Error fetching context data for parcel {request.parcel_id}: {e}", exc_info=True)
-             raise HTTPException(status_code=503, detail=f"Failed to fetch context data: {e}")
-         
-        # 3. Construir el Prompt (Separando System y User)
-        logger.info("Building prompt...")
-        system_prompt: str = self.build_system_prompt(
+        )
+
+        system_prompt, user_prompt, full_prompt = self.build_prompt(
+            user_question=request.user_question,
             project_details=project_details,
             process_info=process_info,
             lunar_analysis=lunar_analysis,
@@ -178,56 +237,49 @@ class RecommendationDomain(BaseModel):
             best_agricultural_practices=best_agricultural_practices,
             historical_information=historical_information,
         )
-        
-        user_prompt: str = request.user_question
-        logger.info("Prompt built.")
 
-        # 4. Seleccionar y Consultar el LLM
-        response_text: str = ""
-        try:
-            if request.model in [
-                ImplementedModels.FLAN_T5_LARGE,
-                ImplementedModels.FALCON_RW_1B,
-                ImplementedModels.GPT_NEO_1_3B
-            ]:
-                 logger.info(f"Querying Hugging Face model: {request.model.value}")
-                 # Para HF, combinamos prompts por ahora, o adaptamos el servicio HF si queremos separación
-                 full_hf_prompt = system_prompt + "\n\nUser/System Request: " + user_prompt
-                 response_text = self.llms_service.query_huggingface_model(
+        if request.model in [
+            ImplementedModels.FLAN_T5_LARGE,
+            ImplementedModels.MISTRAL_8X7B,
+        ]:
+            try:
+                response: str = self.llms_service.query_huggingface_model(
                     model=request.model,
-                    prompt=full_hf_prompt, # Pasar prompt combinado
-                 )
-
-            elif request.model == ImplementedModels.GPT_OPENAI_4O:
-                 logger.info(f"Querying OpenAI model: {request.model.value}")
-                 response_text = self.llms_service.query_openai_model(
-                    model=request.model,
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt
-                 )
-            else:
-                logger.error(f"Requested LLM '{request.model}' not implemented.")
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Requested LLM '{request.model.value}' not implemented or supported.",
+                    prompt=full_prompt,
                 )
 
-            logger.info(f"LLM ({request.model.value}) generated response.")
-            
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error querying LLM: {e}",
+                )
 
-        except RuntimeError as e:
-            logger.error(f"LLM service failed: {e}", exc_info=True)
-            raise HTTPException(status_code=503, detail=f"LLM service error: {e}")
-        except Exception as e:
-            logger.error(f"Unexpected error during LLM query: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Internal server error during recommendation generation: {e}")
+        elif request.model in [
+            ImplementedModels.GPT_OPENAI_4O,
+        ]:
+            try:
+                response: str = self.llms_service.query_openai_model(
+                    model=request.model,
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                )
 
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error querying LLM: {e}",
+                )
 
-        # 5. Formatear y Devolver la Respuesta
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Requested LLM '{request.model}' not implemented",
+            )
+
         return RecommendationResponse(
-            model=request.model,
+            model=request.model.value,
             project_id=project_details.project_id,
             parcel_id=request.parcel_id,
             user_question=request.user_question,
-            details=response_text,
+            details=response,
         )

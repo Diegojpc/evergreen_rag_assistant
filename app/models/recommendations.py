@@ -17,7 +17,7 @@ class RecommendationRequest(BaseModel):
                              Defaults to a standard query about next 5-7 day actions.
     """
 
-    model: ImplementedModels = ImplementedModels.GPT_OPENAI_4O
+    model: ImplementedModels = ImplementedModels.FLAN_T5_LARGE
     parcel_id: str
     user_question: str = "What actions should I take on my crop over the next 5-7 days?"
 

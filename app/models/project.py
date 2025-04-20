@@ -37,12 +37,12 @@ class HistoricalInformation(BaseModel):
         """
 
         return f"""
-            - Year: {self.year}
-            - Parcel ID: {self.parcel_id}
-            - Crop Type: {self.crop_type}
-            - Planting Date: {self.planting_date}
-            - Issues: {self.issues}
-            - Notes: {self.notes}
+                - Year: {self.year}
+                - Parcel ID: {self.parcel_id}
+                - Crop Type: {self.crop_type}
+                - Planting Date: {self.planting_date}
+                - Issues: {self.issues}
+                - Notes: {self.notes}
         """
 
 
